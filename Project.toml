@@ -1,0 +1,7 @@
+name = "mat55"
+uuid = "87ced619-0a4e-4c21-b341-9d20ed7005be"
+authors = ["joao <joaolucasrrolim@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
