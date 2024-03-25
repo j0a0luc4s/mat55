@@ -1,119 +1,85 @@
-# =====================================================================
-# *********************************************************************
-#                    MAT-55 2024 - Lista 01 - Exercício 6 
-# *********************************************************************
-# =====================================================================
-
-# =====================================================================
-#                    Algoritmo de Substituição Direta
-# =====================================================================
-# ---------------------------------------------------------------------
-# Dados de entrada:
-# A     matriz nxn triangular inferior, não singular
-# b     vetor n
-# ---------------------------------------------------------------------
-# Saída:
-# b     se A é não singular, b é a solução do sistema linear Ax = b
-
 using LinearAlgebra
 
-function sub_direta(A::Matrix{T}, b::Vector{T}; atol::T = 1e-12) where {T <: AbstractFloat}
-	@assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
-	n = size(A, 1)
+function upper_direct_substitution(A::Matrix{T}, b::Vector{T}; atol::T=1e-6) where {T<:AbstractFloat}
+        @assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
+        n = size(A, 1)
 
-	@assert all(all(isapprox.(A[i, (i + 1):n], 0, atol=atol)) for i = 1:n)  "A must be a lower triangular matrix"
-	@assert all(!isapprox(A[i, i], 0, atol=atol) for i = 1:n) "A must be a non-singular matrix"
+        @assert all(all(isapprox.(A[i, 1:(i-1)], 0, atol=atol)) for i = 1:n) "A must be an upper triangular matrix"
+        @assert all(!isapprox(A[i, i], 0, atol=atol) for i = 1:n) "A must be a non-singular matrix"
 
-	c = zeros(length(b))
+        c = zeros(length(b))
 
-	for i = 1:n
-		c[i] = (b[i] - A[i, :]' * c)/A[i, i]
-	end
+        for i = n:-1:1
+                c[i] = (b[i] - A[i, :]' * c) / A[i, i]
+        end
 
-	return c
+        return c
 end
 
-# =====================================================================
-#                    Algoritmo de Substituição Inversa
-# =====================================================================
-# ---------------------------------------------------------------------
-# Dados de entrada:
-# A     matriz nxn triangular superior, não singular
-# b     vetor n
-# ---------------------------------------------------------------------
-# Saída:
-# b     se A é não singular, b é a solução do sistema linear Ax = b
-function sub_inversa(A::Matrix{T}, b::Vector{T}; atol::T = 1e-12) where {T <: AbstractFloat}
-	@assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
-	n = size(A, 1)
+function lower_direct_substitution(A::Matrix{T}, b::Vector{T}; atol::T=1e-6) where {T<:AbstractFloat}
+        @assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
+        n = size(A, 1)
 
-	@assert all(all(isapprox.(A[i, 1:(i - 1)], 0, atol=atol)) for i = 1:n)  "A must be an upper triangular matrix"
-	@assert all(!isapprox(A[i, i], 0, atol=atol) for i = 1:n) "A must be a non-singular matrix"
+        @assert all(all(isapprox.(A[i, (i+1):n], 0, atol=atol)) for i = 1:n) "A must be a lower triangular matrix"
+        @assert all(!isapprox(A[i, i], 0, atol=atol) for i = 1:n) "A must be a non-singular matrix"
 
-	c = zeros(length(b))
+        c = zeros(length(b))
 
-	for i = n:-1:1
-		c[i] = (b[i] - A[i, :]' * c)/A[i, i]
-	end
+        for i = 1:n
+                c[i] = (b[i] - A[i, :]' * c) / A[i, i]
+        end
 
-	return c
+        return c
 end
 
-# =====================================================================
-#                    Algoritmo de Eliminação Gaussiana
-# =====================================================================
-# ---------------------------------------------------------------------
-# Dados de entrada:
-# A     matriz nxn triangular superior, não singular
-# b     vetor n
-# ---------------------------------------------------------------------
-# Saída:
-# b     se A é não singular, b é a solução do sistema linear Ax = b
+function gaussian_elimination(A::Matrix{T}, b::Vector{T}; atol::T=1e-6) where {T<:AbstractFloat}
+        @assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
+        n = size(A, 1)
 
-function elim_gauss(A::Matrix{T}, b::Vector{T}; atol::T = 1e-12) where {T <: AbstractFloat}
-	@assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
-	n = size(A, 1)
+        @assert !isapprox(det(A), 0; atol=atol) "A must be a non-singular matrix"
 
-	@assert !isapprox(det(A), 0; atol=atol) "A must be a non-singular matrix"
+        _A = deepcopy(A)
+        _b = deepcopy(b)
 
-	_A = deepcopy(A)
-	_b = deepcopy(b)
+        for k = 1:(n-1)
+                τ = vcat(zeros(k), _A[(k+1):n, k] / _A[k, k])
+                e = vcat(zeros(k - 1), 1, zeros(n - k))
 
-	for k = 1:(n - 1)
-		τ = vcat(zeros(k), _A[(k + 1):n, k] / _A[k, k])
-		e = vcat(zeros(k - 1), 1, zeros(n - k))
+                M = I - τ * e'
 
-		M = I - τ * e'
+                _A = M * _A
+                _b = M * _b
+        end
 
-		_A = M * _A
-		_b = M * _b
-	end
+        c = upper_direct_substitution(_A, _b)
 
-	c = sub_inversa(_A, _b)
-
-	return c
+        return c
 end
 
-# =====================================================================
-# =====================================================================
-#			PROGRAMA PRINCIPAL
-# =====================================================================
-# =====================================================================
-
-# Implemente um programa para resolver o sistema linear Ax = b, com 
-#opção para o usuário fornecer a matriz A, o vetor b e escolher o método 
-#utilizado, dentre as opçõe:
-# a: Algoritmo de Substituição Direta.
-# b: Algoritmo de Substituição Inversa. 
-# C: Eliminação Gaussiana.
-
-# Dados do sistema
-#Digite aqui os dados do sistema linear
-A = [1 2; 3 4.]
-b =  [5; 11.]
-
-# c = sub_direta(A, b)
-# c = sub_inversa(A, b)
-c = elim_gauss(A, b)
-
-println(c)
+println("Type in the number of variables: ")
+n = parse(Int64, readline())
+println("Type in the square matrix A (", n, " lines with ", n, " numbers each): ")
+A = Matrix{Float64}(undef, n, n)
+for i = 1:n
+        A[i, :] = Float64[parse(Float64, el) for el in split(readline())]
+end
+println("Type in the vector b (1 line with ", n, " numbers): ")
+b = Vector{Float64}(undef, n)
+b = Float64[parse(Float64, el) for el in split(readline())]
+println("Select a method (type 1-3): ")
+println("1. upper_direct_substitution")
+println("2. lower_direct_substitution")
+println("3. gaussian_elimination")
+method = parse(Int64, readline())
+if method == 1
+        c = upper_direct_substitution(A, b)
+        println("solution = ", c)
+elseif method == 2
+        c = lower_direct_substitution(A, b)
+        println("solution = ", c)
+elseif method == 3
+        c = gaussian_elimination(A, b)
+        println("solution = ", c)
+else
+        println("invalid method")
+end
