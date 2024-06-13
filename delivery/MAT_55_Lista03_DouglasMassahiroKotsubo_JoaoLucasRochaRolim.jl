@@ -113,10 +113,7 @@ function cholesky_decomposition(A::Matrix{T}; atol::T = 1e-6) where {T <: Abstra
 
     n = size(A, 1)
 
-    for i = 1:n
-        M = A[1:i, 1:i]
-        @assert det(M) > 0 && !isapprox(det(M), 0; atol=atol) "A must be positive definite"
-    end
+    @assert all(det(A[1:i, 1:i]) > 0 && !isapprox(det(A[1:i, 1:i]), 0; atol) for i in 1:n) "A must be positive definite"
 
     G = zeros(n, n)
 
