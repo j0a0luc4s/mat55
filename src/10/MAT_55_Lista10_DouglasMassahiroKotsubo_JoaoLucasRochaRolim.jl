@@ -19,25 +19,43 @@ Y = parse.(Float64, Y);
 
 ############################
 #Matriz na forma de desvio de média:
-A = zeros(l-1,c-1);
-for i = 1:l-2
+A = zeros(l - 2,c - 1);
+avg = zeros(1,c - 1);
+for i = 1 : l-2
     A[i,:] = Y[i,:] - Y[i+1,:];
+end
+
+for i = 1 : l-2
+    global avg += A[i,:]';
+end
+
+avg = avg / (l-2);
+
+for i = 1 : l-2
+    A[i,:] = A[i,:] - avg';
 end
 
 ############################
 #Matriz de covariância:
-K = A'*A;
-K = A/(l-1);
+K = A' * A;
+K = K / (l-1);
 
 ############################
 #SVD
 U, S, V = svd(K);
+
+############################
+#Análise de componentes principais 
+Vec1 = U[:,1]*S[1];
+Vec2 = U[:,2]*S[2];
 
 # =====================================================================
 # 		           Comentários
 # =====================================================================
 #Digite aqui os seus comentários. Que informção relevante sobre os dados você obteve após aplicar a Análise de Componentes Principais? 
 #
-#Observa-se que os valores singulares possuem ordens de grandeza semelhantes o que indica
-#que as informações contidas na matriz original são todas relevantes.
+#Observa-se que os primeiros 2 valores singulares possuem ordens de grandeza superiores aos outros
+#logo essas são as componentes principais da nossa matriz. Isto indica que a variação da taxa de juros
+#para um mes influencia fortemente a variação das taxas de juros para os outros meses.
+#
 #
