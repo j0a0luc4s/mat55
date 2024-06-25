@@ -1,23 +1,32 @@
-function gaussian_elimination(A::Matrix{T}, b::Vector{T}; atol::T = 1e-6) where {T <: AbstractFloat}
+function gaussian_elimination(
+    A::AbstractMatrix{Tp},
+    b::AbstractVector{Tp};
+    atol::Tp = sqrt(eps(Tp))
+) where {Tp <: AbstractFloat}
     @assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
     n = size(A, 1)
 
-    @assert !isapprox(det(A), 0; atol=atol) "A must be a non-singular matrix"
+    U = deepcopy(A)
+    b = deepcopy(b)
 
-    _A = deepcopy(A)
-    _b = deepcopy(b)
+    for k = 1:n - 1
+        _, i = findmax(abs.(U[k:n, k]))
+        i = i + k - 1
+        @assert !isapprox(U[i, k], 0; atol=atol) "A must be a non-singular matrix"
 
-    for k = 1:(n - 1)
-        τ = vcat(zeros(k), _A[(k + 1):n, k] / _A[k, k])
-        e = vcat(zeros(k - 1), 1, zeros(n - k))
+        U[i, :], U[k, :] = U[k, :], U[i, :]
+        b[i], b[k] = b[k], b[i]
+
+        τ = vcat(zeros(Tp, k), U[k + 1:n, k] / U[k, k])
+        e = vcat(zeros(Tp, k - 1), 1, zeros(Tp, n - k))
 
         M = I - τ * e'
 
-        _A = M * _A
-        _b = M * _b
+        U = M * U
+        b = M * b
     end
 
-    c = upper_direct_substitution(_A, _b)
+    c = upper_direct_substitution(U, b; atol=atol)
 
     return c
 end
