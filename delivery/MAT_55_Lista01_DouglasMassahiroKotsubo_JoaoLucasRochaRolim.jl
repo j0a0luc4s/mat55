@@ -1,6 +1,10 @@
 using LinearAlgebra
 
-function upper_direct_substitution(A::Matrix{T}, b::Vector{T}; atol::T=1e-6) where {T<:AbstractFloat}
+function upper_direct_substitution(
+    A::Matrix{T},
+    b::Vector{T};
+    atol::T=1e-6
+) where {T<:AbstractFloat}
     @assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
     n = size(A, 1)
 
@@ -16,7 +20,11 @@ function upper_direct_substitution(A::Matrix{T}, b::Vector{T}; atol::T=1e-6) whe
     return c
 end
 
-function lower_direct_substitution(A::Matrix{T}, b::Vector{T}; atol::T=1e-6) where {T<:AbstractFloat}
+function lower_direct_substitution(
+    A::Matrix{T},
+    b::Vector{T};
+    atol::T=1e-6
+) where {T<:AbstractFloat}
     @assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
     n = size(A, 1)
 
@@ -32,16 +40,20 @@ function lower_direct_substitution(A::Matrix{T}, b::Vector{T}; atol::T=1e-6) whe
     return c
 end
 
-function gaussian_elimination(A::Matrix{T}, b::Vector{T}; atol::T=1e-6) where {T<:AbstractFloat}
+function gaussian_elimination(
+    A::Matrix{T},
+    b::Vector{T};
+    atol::T=1e-6
+) where {T<:AbstractFloat}
     @assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
     n = size(A, 1)
-
-    @assert !isapprox(det(A), 0; atol=atol) "A must be a non-singular matrix"
 
     _A = deepcopy(A)
     _b = deepcopy(b)
 
     for k = 1:(n-1)
+        @assert !isapprox(_A[k, k], 0; atol=atol) "A must be a non-singular matrix"
+
         τ = vcat(zeros(k), _A[(k+1):n, k] / _A[k, k])
         e = vcat(zeros(k - 1), 1, zeros(n - k))
 
