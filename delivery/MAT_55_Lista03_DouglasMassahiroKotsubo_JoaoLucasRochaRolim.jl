@@ -126,7 +126,10 @@ function lu_decomposition_pivot(
     return L, U, P
 end
 
-function cholesky_decomposition(A::Matrix{T}; atol::T = 1e-6) where {T <: AbstractFloat}
+function cholesky_decomposition(
+    A::Matrix{T};
+    atol::T = 1e-6
+) where {T <: AbstractFloat}
     @assert size(A, 1) == size(A, 2) "A must be a square matrix"
     n = size(A, 1)
 
