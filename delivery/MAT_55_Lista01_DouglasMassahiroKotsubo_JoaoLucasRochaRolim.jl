@@ -1,17 +1,17 @@
 using LinearAlgebra
 
 function upper_direct_substitution(
-    A::Matrix{T},
-    b::Vector{T};
-    atol::T=1e-6
-) where {T<:AbstractFloat}
+    A::AbstractMatrix{Tp},
+    b::AbstractVector{Tp};
+    atol::Tp=1e-6
+) where {Tp<:AbstractFloat}
     @assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
     n = size(A, 1)
 
     @assert all(all(isapprox.(A[i, 1:(i-1)], 0, atol=atol)) for i = 1:n) "A must be an upper triangular matrix"
     @assert all(!isapprox(A[i, i], 0, atol=atol) for i = 1:n) "A must be a non-singular matrix"
 
-    c = zeros(length(b))
+    c = zeros(Tp, n)
 
     for i = n:-1:1
         c[i] = (b[i] - A[i, :]' * c) / A[i, i]
@@ -21,17 +21,17 @@ function upper_direct_substitution(
 end
 
 function lower_direct_substitution(
-    A::Matrix{T},
-    b::Vector{T};
-    atol::T=1e-6
-) where {T<:AbstractFloat}
+    A::AbstractMatrix{Tp},
+    b::AbstractVector{Tp};
+    atol::Tp=1e-6
+) where {Tp<:AbstractFloat}
     @assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
     n = size(A, 1)
 
     @assert all(all(isapprox.(A[i, (i+1):n], 0, atol=atol)) for i = 1:n) "A must be a lower triangular matrix"
     @assert all(!isapprox(A[i, i], 0, atol=atol) for i = 1:n) "A must be a non-singular matrix"
 
-    c = zeros(length(b))
+    c = zeros(Tp, n)
 
     for i = 1:n
         c[i] = (b[i] - A[i, :]' * c) / A[i, i]
@@ -41,10 +41,10 @@ function lower_direct_substitution(
 end
 
 function gaussian_elimination(
-    A::Matrix{T},
-    b::Vector{T};
-    atol::T=1e-6
-) where {T<:AbstractFloat}
+    A::AbstractMatrix{Tp},
+    b::AbstractVector{Tp};
+    atol::Tp=1e-6
+) where {Tp<:AbstractFloat}
     @assert size(A, 1) == size(A, 2) == length(b) "A and b dimension mismatch"
     n = size(A, 1)
 
@@ -54,8 +54,8 @@ function gaussian_elimination(
     for k = 1:(n-1)
         @assert !isapprox(_A[k, k], 0; atol=atol) "A must be a non-singular matrix"
 
-        τ = vcat(zeros(k), _A[(k+1):n, k] / _A[k, k])
-        e = vcat(zeros(k - 1), 1, zeros(n - k))
+        τ = vcat(zeros(Tp, k), _A[(k+1):n, k] / _A[k, k])
+        e = vcat(zeros(Tp, k - 1), 1, zeros(Tp, n - k))
 
         M = I - τ * e'
 
@@ -63,7 +63,7 @@ function gaussian_elimination(
         _b = M * _b
     end
 
-    c = upper_direct_substitution(_A, _b)
+    c = upper_direct_substitution(_A, _b; atol=atol)
 
     return c
 end
